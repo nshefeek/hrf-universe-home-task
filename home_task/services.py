@@ -173,7 +173,7 @@ def save_stats(
     upsert_stats(db, stats_data)
 
 
-def calculate_and_save_stats_in_batches(batch_size: int = 1000) -> None:
+def calculate_and_save_stats_in_batches(batch_size: int = 1000, min_postings_threshold: int = 5) -> None:
     logger.info("Starting calculate_and_save_stats_in_batches with batch_size=%d, min_postings=%d", batch_size)
     with get_session() as db:
         standard_job_ids = get_distinct_standard_job_ids(db)
@@ -189,7 +189,8 @@ def calculate_and_save_stats_in_batches(batch_size: int = 1000) -> None:
                     logger.debug("Received batch of %d days_to_hire: %s", len(batch), batch[:5])
                     country_days.extend(batch)
                 
-                if country_days:
+                if len(country_days) >= min_postings_threshold:
+                    logger.debug("Calculating stats for country_code=%s with %d days_to_hire", country_code, len(country_days))
                     stats = calculate_stats(country_days)
                     if stats:
                         logger.debug("Calculated stats for country_code=%s: %s", country_code, stats)
@@ -201,7 +202,7 @@ def calculate_and_save_stats_in_batches(batch_size: int = 1000) -> None:
             for batch in get_days_to_hire_for_sjid_country(db, standard_job_id, None, batch_size=batch_size):
                 logger.debug("Received batch of %d days_to_hire: %s", len(batch), batch[:5])
                 all_days.extend(batch)
-            if all_days:
+            if len(all_days) >= min_postings_threshold:
                 stats = calculate_stats(all_days)
                 if stats:
                     logger.debug("Calculated global stats for standard_job_id=%s: %s", standard_job_id, stats)

@@ -173,7 +173,7 @@ def save_stats(
     upsert_stats(db, stats_data)
 
 
-def calculate_and_save_stats_in_batches(batch_size: int = 1000, min_postings_threshold: int = 5) -> None:
+def calculate_and_save_stats_in_batches(min_postings_threshold: int = 5, batch_size: int = 1000) -> None:
     logger.info("Starting calculate_and_save_stats_in_batches with batch_size=%d, min_postings=%d", batch_size)
     with get_session() as db:
         standard_job_ids = get_distinct_standard_job_ids(db)
